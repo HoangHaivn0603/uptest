@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@theme {
+  --color-traditional-red: #B91C1C;
+  --color-traditional-red-dark: #991B1B;
+  --color-traditional-red-light: #EF4444;
+  
+  --color-traditional-gold: #FBBF24;
+  --color-traditional-gold-dark: #D97706;
+  --color-traditional-gold-light: #FDE68A;
+  
+  --color-viet-black: #111827;
+  --color-viet-cream: #FFFBEB;
+  
+  --font-serif: "Crimson Pro", serif;
+  --font-sans: "Outfit", sans-serif;
+  
+  --animate-fade-in: fadeIn 0.5s ease-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Base styles using plain CSS since we have access to variables */
+body {
+  background-color: var(--color-viet-cream);
+  color: #111827;
+  font-family: var(--font-sans);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.dark body {
+  background-color: var(--color-viet-black);
+  color: #f9fafb;
+}
+
+/* Custom Components */
+.glass {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass {
+  background-color: rgba(17, 24, 39, 0.7);
+  border-color: rgba(31, 41, 55, 0.5);
+}
+
+.btn-traditional {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-traditional-red);
+  color: white;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-traditional:hover {
+  background-color: var(--color-traditional-red-dark);
+}
+
+.btn-traditional:active {
+  transform: scale(0.95);
+}
+
+/* Calendar Grid */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.day-cell {
+  min-height: 80px;
+  padding: 0.5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  border-radius: 0.75rem;
+}
+
+.day-cell:hover {
+  background-color: rgba(185, 28, 28, 0.05);
+}
+
+.dark .day-cell:hover {
+  background-color: rgba(185, 28, 28, 0.1);
+}
+
+.day-cell.today {
+  background-color: rgba(185, 28, 28, 0.1);
+  border: 1px solid rgba(185, 28, 28, 0.3);
+}
+
+.day-cell.other-month {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(185, 28, 28, 0.3);
+  border-radius: 10px;
+}
