@@ -1,13 +1,41 @@
 @import "tailwindcss";
 
-@theme {
-  --color-traditional-red: #B91C1C;
-  --color-traditional-red-dark: #991B1B;
-  --color-traditional-red-light: #EF4444;
+:root {
+  --primary: #B91C1C;
+  --primary-dark: #991B1B;
+  --primary-light: #EF4444;
   
-  --color-traditional-gold: #FBBF24;
-  --color-traditional-gold-dark: #D97706;
-  --color-traditional-gold-light: #FDE68A;
+  --secondary: #FBBF24;
+  --secondary-dark: #D97706;
+  --secondary-light: #FDE68A;
+}
+
+[data-theme="royal"] {
+  --primary: #1E40AF;
+  --primary-dark: #1E3A8A;
+  --primary-light: #3B82F6;
+}
+
+[data-theme="emerald"] {
+  --primary: #065F46;
+  --primary-dark: #064E3B;
+  --primary-light: #10B981;
+}
+
+[data-theme="lotus"] {
+  --primary: #DB2777;
+  --primary-dark: #BE185D;
+  --primary-light: #F472B6;
+}
+
+@theme {
+  --color-traditional-red: var(--primary);
+  --color-traditional-red-dark: var(--primary-dark);
+  --color-traditional-red-light: var(--primary-light);
+  
+  --color-traditional-gold: var(--secondary);
+  --color-traditional-gold-dark: var(--secondary-dark);
+  --color-traditional-gold-light: var(--secondary-light);
   
   --color-viet-black: #111827;
   --color-viet-cream: #FFFBEB;
