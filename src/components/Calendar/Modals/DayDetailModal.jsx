@@ -1,7 +1,7 @@
-﻿import React from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Moon, CheckCircle2, XCircle, Clock, Compass, Navigation, Star, Bell, Plus, Info, Trash2 } from 'lucide-react';
-import { isAuspiciousTruc } from '../../../utils/lunar';
+import { isAuspiciousTruc, get12HoursDetails } from '../../../utils/lunar';
 import { getCanChiFromYear, getDirections, getCompatibility, getHourlyCompatibility } from '../../../utils/horoscope';
 import { matchEvents, getSystemReminders } from '../../../utils/events';
 import { cn, modalVariants, overlayVariants } from '../../../utils/helpers';
@@ -105,36 +105,61 @@ export default function DayDetailModal({
                 </div>
               </div>
 
-              {/* Hourly Compatibility Grid */}
-              <div className="p-5 rounded-3xl border border-gray-100 dark:border-gray-800">
-                <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-4 h-4 text-traditional-gold" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Giờ Hoàng Đạo theo tuổi</span>
+              {/* 12-Hour Timeline (Auspicious/Inauspicious) */}
+              <div className="p-5 rounded-[2rem] border border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-black/20 shadow-inner">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-traditional-gold" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Khung giờ trong ngày</span>
+                  </div>
+                  <div className="px-2 py-0.5 rounded-full bg-traditional-gold/10 text-traditional-gold text-[8px] font-black uppercase tracking-tighter">12 Giờ Can Chi</div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {selectedDetails.luckyHours.split(', ').map((hourFull, i) => {
-                    const hourChi = hourFull.split(' ')[0];
-                    const userCC = getCanChiFromYear(userYear);
-                    const comp = userCC ? getHourlyCompatibility(userCC.chi, hourChi) : 'neutral';
+
+                <div className="grid grid-cols-2 gap-3">
+                  {get12HoursDetails(selectedDate).map((h, i) => {
+                    const isNow = new Date().toDateString() === selectedDate.toDateString() && 
+                                 new Date().getHours() >= h.start && 
+                                 (h.end === 1 ? new Date().getHours() >= 23 || new Date().getHours() < 1 : new Date().getHours() < h.end);
                     
                     return (
                       <div key={i} className={cn(
-                        "px-3 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between border transition-all",
-                        comp === 'good' ? "bg-green-500/10 border-green-500/30 text-green-700" : 
-                        comp === 'bad' ? "bg-red-500/10 border-red-500/30 text-red-700" :
-                        "bg-gray-100 dark:bg-gray-800 border-transparent text-gray-700 dark:text-gray-300"
+                        "relative p-3 rounded-2xl border transition-all flex flex-col gap-1 overflow-hidden group",
+                        isNow ? "border-traditional-red bg-traditional-red/5 ring-1 ring-traditional-red/20" : "border-gray-50 dark:border-gray-900 bg-gray-50/50 dark:bg-gray-900/30"
                       )}>
-                        <span>{hourFull}</span>
-                        {comp === 'good' && <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>}
+                        {isNow && (
+                          <div className="absolute top-0 right-0 p-1 bg-traditional-red text-white text-[7px] font-black uppercase tracking-tighter rounded-bl-lg">Hiện tại</div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className={cn("text-xs font-black", h.isLucky ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 opacity-60")}>
+                            Giờ {h.name}
+                          </span>
+                          {h.isLucky ? (
+                            <Star className="w-2.5 h-2.5 text-traditional-gold fill-traditional-gold" />
+                          ) : (
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+                          )}
+                        </div>
+                        <p className="text-[10px] font-bold text-gray-500 tabular-nums">{h.range}</p>
+                        <p className={cn(
+                          "text-[8px] font-black uppercase tracking-widest mt-1",
+                          h.isLucky ? "text-emerald-500" : "text-gray-400 opacity-40"
+                        )}>
+                          {h.isLucky ? 'Hoàng Đạo' : 'Hắc Đạo'}
+                        </p>
                       </div>
                     );
                   })}
                 </div>
-                {userYear && (
-                  <p className="mt-3 text-[10px] text-gray-400 italic">
-                    * Chấm xanh biểu thị khung giờ cực kỳ hợp với tuổi {getCanChiFromYear(userYear).fullName}.
-                  </p>
-                )}
+                <div className="mt-4 flex items-center gap-2 justify-center">
+                   <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Tốt</span>
+                   </div>
+                   <div className="flex items-center gap-1 ml-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Bình thường</span>
+                   </div>
+                </div>
               </div>
 
               {/* Directions Section */}

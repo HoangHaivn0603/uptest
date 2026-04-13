@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Moon, Quote, DollarSign, Heart, Activity, Star, CalendarPlus, Sparkles, Sun, Cloud, CloudSun, CloudFog, CloudDrizzle, CloudLightning, CloudSnow, CloudRain, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { getDayDetails } from '../../utils/lunar';
@@ -14,8 +14,11 @@ const WeatherIcon = ({ name, className }) => {
   return <Icon className={className} />;
 };
 
+import { useLiveClock } from '../../hooks/useLiveClock';
+
 export function TodayWidget({ weather, aqiData, nextHoliday, onWeatherClick }) {
-  const details = getDayDetails(new Date());
+  const { now, currentCanChi, isLucky } = useLiveClock();
+  const details = getDayDetails(now);
   
   return (
     <div className="mb-8 mt-2 animate-slide-up">
@@ -24,23 +27,42 @@ export function TodayWidget({ weather, aqiData, nextHoliday, onWeatherClick }) {
           <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
           
           <div className="flex gap-6 items-center">
-            <div className="w-24 h-24 rounded-3xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col items-center justify-center border-b-4 border-traditional-red shrink-0 relative">
+            {/* Live Minimalist Clock */}
+            <div className="w-24 h-24 rounded-3xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col items-center justify-center border-b-4 border-traditional-red shrink-0 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-traditional-gold rounded-t-3xl"></div>
-              <span className="text-4xl font-black text-traditional-red leading-none">{format(new Date(), 'd')}</span>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">THỨ {format(new Date(), 'i') === '7' ? 'CN' : parseInt(format(new Date(), 'i')) + 1}</span>
+              <div className="flex flex-col items-center">
+                <span className="text-3xl font-black text-traditional-red tabular-nums leading-none mb-1">
+                  {format(now, 'HH:mm')}
+                </span>
+                <span className="text-[10px] font-black text-traditional-red opacity-40 tabular-nums leading-none">
+                  {format(now, 'ss')}
+                </span>
+              </div>
+              <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-2">
+                Thứ {format(now, 'i') === '7' ? 'CN' : parseInt(format(now, 'i')) + 1}
+              </p>
             </div>
 
             <div className="flex-1">
+              {/* Current Can Chi Hour with Status */}
               <div className="flex items-center gap-2 mb-2">
-                 <Moon className="w-3 h-3 text-traditional-gold" />
-                 <span className="text-[10px] font-bold text-traditional-gold uppercase tracking-widest">Âm Lịch Hôm Nay</span>
+                 <div className={cn(
+                   "w-2 h-2 rounded-full animate-pulse",
+                   isLucky ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-gray-400"
+                 )}></div>
+                 <span className="text-[10px] font-bold text-traditional-gold uppercase tracking-widest">
+                   Giờ {currentCanChi.name} ({currentCanChi.range})
+                 </span>
+                 {isLucky && (
+                   <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-tighter">Hoàng Đạo</span>
+                 )}
               </div>
               <h3 className="text-xl font-bold text-white mb-1">
                 Ngày {details.lunar.date} tháng {details.lunar.month}
               </h3>
               <div className="flex flex-wrap gap-x-3 gap-y-1">
-                <p className="text-xs text-white/70 font-medium">Nam {details.lunar.canChiYear}</p>
-                <p className="text-xs text-white/70 font-medium">• {details.lunar.canChiDay}</p>
+                <p className="text-xs text-white/70 font-medium">Năm {details.lunar.canChiYear}</p>
+                <p className="text-xs text-white/70 font-medium whitespace-nowrap">• Ngày {details.lunar.canChiDay}</p>
                 <p className="text-xs text-traditional-gold font-bold">Tiết {details.solarTerm}</p>
               </div>
             </div>
@@ -48,7 +70,7 @@ export function TodayWidget({ weather, aqiData, nextHoliday, onWeatherClick }) {
             {weather && (
               <div 
                 onClick={onWeatherClick}
-                className="absolute top-6 right-6 text-right cursor-pointer hover:scale-105 transition-transform group"
+                className="absolute top-6 right-6 text-right cursor-pointer hover:scale-105 transition-transform group hidden sm:block"
               >
                 <div className="flex items-center justify-end gap-2 mb-1">
                    {aqiData && (
