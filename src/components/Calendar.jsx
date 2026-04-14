@@ -165,6 +165,8 @@ export default function Calendar() {
         days={days}
         onDayClick={handleDayClick}
         events={events}
+        onPrevMonth={handlePrevMonth}
+        onNextMonth={handleNextMonth}
       />
 
       {/* Bottom Navigation */}

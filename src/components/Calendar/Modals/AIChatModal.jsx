@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, MessageSquare, Bot, User, Sparkles, Users, Smile, Heart, Star, Compass } from 'lucide-react';
+import { 
+  X, Send, MessageSquare, Bot, User, Sparkles, Users, Smile, 
+  Trash2, UserX, ShieldCheck, ShieldEllipsis, Settings2, Loader2
+} from 'lucide-react';
 import { cn, modalVariants, overlayVariants } from '../../../utils/helpers';
 import { useAIChat } from '../../../hooks/useAIChat';
 import { useGroupChat } from '../../../hooks/useGroupChat';
@@ -91,13 +94,15 @@ export default function CommunicationModal({
   user
 }) {
   const [activeTab, setActiveTab] = useState('ai');
+  const [currentRoomId, setCurrentRoomId] = useState('community-1');
   const [showPicker, setShowPicker] = useState(false);
   const [inputValue, setInputValue] = useState('');
   
   const aiChat = useAIChat(appData);
-  const groupChat = useGroupChat(user, appData);
+  const groupChat1 = useGroupChat(user, { roomId: 'community-1' });
+  const groupChat2 = useGroupChat(user, { roomId: 'community-2' });
   
-  const currentChat = activeTab === 'ai' ? aiChat : groupChat;
+  const currentChat = activeTab === 'ai' ? aiChat : (currentRoomId === 'community-1' ? groupChat1 : groupChat2);
   const scrollRef = useRef(null);
 
   // Auto-scroll to bottom of chat
@@ -106,7 +111,7 @@ export default function CommunicationModal({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
     setShowPicker(false);
-  }, [currentChat.messages, currentChat.isTyping, activeTab]);
+  }, [currentChat.messages, currentChat.isTyping, currentChat.isConnecting, activeTab, currentRoomId]);
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
@@ -158,11 +163,58 @@ export default function CommunicationModal({
           >
             <ModalHeader activeTab={activeTab} onTabChange={setActiveTab} onClose={onClose} />
 
+            {/* Room Switcher (Only in Community Tab) */}
+            {activeTab === 'group' && (
+              <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50 dark:border-gray-900 bg-gray-50/50 dark:bg-gray-950/20">
+                <div className="flex p-0.5 bg-gray-200/50 dark:bg-gray-900 rounded-xl gap-0.5">
+                  <button 
+                    onClick={() => setCurrentRoomId('community-1')}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-[10px] font-black transition-all",
+                      currentRoomId === 'community-1' ? "bg-white dark:bg-gray-800 text-traditional-red shadow-sm" : "text-gray-400"
+                    )}
+                  >
+                    Phòng 1 (Offline)
+                  </button>
+                  <button 
+                    onClick={() => setCurrentRoomId('community-2')}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-[10px] font-black transition-all flex items-center gap-1.5",
+                      currentRoomId === 'community-2' ? "bg-white dark:bg-gray-800 text-traditional-red shadow-sm" : "text-gray-400"
+                    )}
+                  >
+                    Phòng 2 (Firebase)
+                  </button>
+                </div>
+
+                {/* Admin Mode Toggle */}
+                <button 
+                  onClick={() => currentChat.toggleAdmin()}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-[10px] font-black uppercase tracking-wider",
+                    currentChat.isAdmin 
+                      ? "bg-amber-500/10 border-amber-500/30 text-amber-600 shadow-sm" 
+                      : "bg-gray-100 dark:bg-gray-900 border-transparent text-gray-400"
+                  )}
+                >
+                  <ShieldCheck className={cn("w-3.5 h-3.5", currentChat.isAdmin ? "animate-pulse" : "")} />
+                  {currentChat.isAdmin ? "Moderating" : "Admin?"}
+                </button>
+              </div>
+            )}
+
             {/* Chat Body */}
             <div 
               ref={scrollRef}
               className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-gradient-to-b from-gray-50/50 to-transparent dark:from-transparent relative"
             >
+              {currentChat.isConnecting && (
+                <div className="absolute inset-0 z-10 bg-white/50 dark:bg-gray-950/50 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3">
+                  <Loader2 className="w-8 h-8 text-traditional-red animate-spin" />
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Đang kết nối Firebase...</p>
+                </div>
+              )}
+
               {currentChat.messages.map((msg, i) => {
                 const isSystem = msg.role === 'system';
                 if (isSystem) {
@@ -180,7 +232,7 @@ export default function CommunicationModal({
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     className={cn(
-                      "flex items-start gap-2.5",
+                      "flex items-start gap-2.5 group/msg",
                       isMe ? "flex-row-reverse" : "flex-row"
                     )}
                   >
@@ -190,25 +242,62 @@ export default function CommunicationModal({
                     )}>
                       {msg.role === 'assistant' ? <Bot className="w-5 h-5 text-traditional-red" /> : msg.avatar || '👤'}
                     </div>
+                    
                     <div className={cn("max-w-[75%]", isMe ? "text-right" : "text-left")}>
-                      {!isMe && msg.sender && (
-                        <p className={cn("text-[10px] font-black uppercase tracking-wider mb-1 px-1", msg.color || "text-gray-400")}>
-                          {msg.sender}
-                        </p>
-                      )}
+                      <div className={cn("flex items-center gap-2 mb-1 px-1", isMe ? "flex-row-reverse" : "flex-row")}>
+                        {!isMe && msg.sender && (
+                          <p className={cn("text-[10px] font-black uppercase tracking-wider", msg.color || "text-gray-400")}>
+                            {msg.sender}
+                          </p>
+                        )}
+                        {/* Admin Badge */}
+                        {((isMe && currentChat.isAdmin) || msg.isAdmin) && (
+                          <span className="px-1.5 py-0.5 bg-amber-500 rounded-md text-[8px] font-black text-white uppercase flex items-center gap-0.5">
+                            <ShieldCheck className="w-2.5 h-2.5" /> QTV
+                          </span>
+                        )}
+                      </div>
                       
-                      {msg.type === 'sticker' ? (
-                        <div className="text-6xl animate-bounce-slow py-2">{msg.content}</div>
-                      ) : (
-                        <div className={cn(
-                          "p-4 rounded-3xl text-sm leading-relaxed shadow-sm",
-                          isMe 
-                            ? "bg-traditional-red text-white rounded-tr-none" 
-                            : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-800 rounded-tl-none font-medium text-left"
-                        )}>
-                          {msg.content}
-                        </div>
-                      )}
+                      <div className="relative group/content">
+                        {msg.type === 'sticker' ? (
+                          <div className="text-6xl animate-bounce-slow py-2">{msg.content}</div>
+                        ) : (
+                          <div className={cn(
+                            "p-4 rounded-3xl text-sm leading-relaxed shadow-sm transition-all",
+                            isMe 
+                              ? "bg-traditional-red text-white rounded-tr-none" 
+                              : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-800 rounded-tl-none font-medium text-left",
+                            currentChat.isAdmin && "hover:ring-2 hover:ring-traditional-red/20 cursor-default"
+                          )}>
+                            {msg.content}
+                          </div>
+                        )}
+
+                        {/* Admin Actions Overlay */}
+                        {currentChat.isAdmin && (
+                          <div className={cn(
+                            "absolute top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity",
+                            isMe ? "right-full mr-3" : "left-full ml-3"
+                          )}>
+                            <button 
+                              onClick={() => currentChat.deleteMessage(msg.id)}
+                              className="p-2 bg-red-500 text-white rounded-xl shadow-lg hover:scale-110 active:scale-90 transition-transform"
+                              title="Xóa tin nhắn"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                            {!isMe && msg.role !== 'system' && (
+                              <button 
+                                onClick={() => currentChat.banUser(msg.sender, msg.userId)}
+                                className="p-2 bg-gray-950 text-white rounded-xl shadow-lg hover:scale-110 active:scale-90 transition-transform"
+                                title="Chặn người dùng"
+                              >
+                                <UserX className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -324,7 +413,7 @@ export default function CommunicationModal({
 
               <div className="mt-4 flex items-center justify-center gap-1.5 opacity-50">
                 <Sparkles className="w-3 h-3 text-traditional-gold" />
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">{activeTab === 'ai' ? "Premium Assistant" : "LichViet Community"}</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">{activeTab === 'ai' ? "Premium Assistant" : `LichViet Community - ${currentRoomId === 'community-1' ? "Phòng 1" : "Phòng 2"}`}</p>
               </div>
             </div>
           </motion.div>
